@@ -1,0 +1,149 @@
+﻿@page "/currencies"
+@using Volo.Abp.Application.Dtos
+@using Haram.Remittance.Currencies
+@using Haram.Remittance.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<RemittanceResource> L
+@inject AbpBlazorMessageLocalizerHelper<RemittanceResource> LH
+@inherits AbpCrudPageBase<ICurrencyAppService, CurrencyDto, Guid, PagedAndSortedResultRequestDto, CreateUpdateCurrencyDto>
+
+<Card>
+    <CardHeader>
+        <Row Class="justify-content-between">
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <h2>@L["Currencies"]</h2>
+            </Column>
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <Button Color="Color.Primary"
+                        Clicked="OpenCreateModalAsync">
+                    @L["NewCurrency"]
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        <DataGrid TItem="CurrencyDto"
+                  Data="Entities"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="CurrencyDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="CurrencyDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="CurrencyDto"
+                                          Text="@L["Edit"]"
+                                          Clicked="() => OpenEditModalAsync(context)" />
+                            <EntityAction TItem="CurrencyDto"
+                                          Text="@L["Delete"]"
+                                          Clicked="() => DeleteEntityAsync(context)"
+                                          ConfirmationMessage="() => GetDeleteConfirmationMessage(context)" />
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+                <DataGridColumn TItem="CurrencyDto"
+                                Field="@nameof(CurrencyDto.Name)"
+                                Caption="@L["Name"]">
+                </DataGridColumn>
+                <DataGridColumn TItem="CurrencyDto"
+                                Field="@nameof(CurrencyDto.Symbol)"
+                                Caption="@L["Symbol"]">
+                </DataGridColumn>
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+<Modal @ref="@CreateModal">
+    <ModalBackdrop />
+    <ModalContent IsCentered="true">
+        <Form>
+            <ModalHeader>
+                <ModalTitle>@L["NewCurrency"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateModalAsync"/>
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@CreateValidationsRef" Model="@NewEntity" ValidateOnLoad="false">
+                    <Validation MessageLocalizer="@LH.Localize">
+                        <Field>
+                            <FieldLabel>@L["Name"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewEntity.Name">
+                                <Feedback>
+                                    <ValidationError/>
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+                    <Validation MessageLocalizer="@LH.Localize">
+                    <Field>
+                        <FieldLabel>@L["Symbol"]</FieldLabel>
+                            <TextEdit @bind-Text="NewEntity.Symbol" >
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                            </TextEdit>
+                    </Field>
+                        </Validation>
+                  
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseCreateModalAsync">@L["Cancel"]</Button>
+                <Button Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Clicked="CreateEntityAsync">@L["Save"]</Button>
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+<Modal @ref="@EditModal">
+    <ModalBackdrop />
+    <ModalContent IsCentered="true">
+        <Form>
+            <ModalHeader>
+                <ModalTitle>@EditingEntity.Name</ModalTitle>
+                <CloseButton Clicked="CloseEditModalAsync"/>
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditValidationsRef" Model="@NewEntity" ValidateOnLoad="false">
+                    <Validation MessageLocalizer="@LH.Localize">
+                        <Field>
+                            <FieldLabel>@L["Name"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingEntity.Name">
+                                <Feedback>
+                                    <ValidationError/>
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+                    <Validation MessageLocalizer="@LH.Localize">
+                    <Field>
+                        <FieldLabel>@L["Symbol"]</FieldLabel>
+                            <TextEdit @bind-Text="EditingEntity.Symbol" >
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                            </TextEdit>
+                    </Field>
+                        </Validation>
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseEditModalAsync">@L["Cancel"]</Button>
+                <Button Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Clicked="UpdateEntityAsync">@L["Save"]</Button>
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+
+
+@code {
+
+}

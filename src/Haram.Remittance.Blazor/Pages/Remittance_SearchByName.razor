@@ -1,0 +1,84 @@
+﻿@page "/remittances/search"
+@using Blazorise.DataGrid;
+@using Haram.Remittance.Localization
+@using Haram.Remittance.Remittances
+@inherits RemittanceComponentBase
+@inject IRemittanceAppService RemittanceAppService
+@inject AbpBlazorMessageLocalizerHelper<RemittanceResource> LH
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12"> 
+            <div class="input-group mb-3">  
+                <input type="text" class="form-control search-input" @bind="customerName" @onkeydown="OnCustomerNameChange" placeholder="Enter Customer Name" />
+                <button class="btn btn-outline-primary" type="button" @onclick="LoadRemittances">Search</button>
+            </div>
+        </div>
+     </div>
+</div
+
+
+<DataGrid TItem="RemittanceDto"
+          Data="Remittances"
+          ShowPager="false"
+          >
+        <DataGridColumns>
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.Type)"
+                        Caption="@L["RemittanceType"]">
+            <DisplayTemplate>
+                @L[$"Enum:Remittance.Type.{context.Type}"]
+            </DisplayTemplate>
+        </DataGridColumn>
+
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.SerialNumber)"
+                        Caption="@L["SerialNumber"]">
+        </DataGridColumn>
+
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.Amount)"
+                        Caption="@L["Amounto"]">
+        </DataGridColumn>
+
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.TotalAmount)"
+                        Caption="@L["TotalAmount"]">
+        </DataGridColumn>
+
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.SenderFullName)"
+                        Caption="@L["SenderFullName"]">
+        </DataGridColumn>
+        <DataGridColumn TItem="RemittanceDto"
+                        Field="@nameof(RemittanceDto.CurrentStatus)"
+                        Caption="@L["Status"]">
+                        <DisplayTemplate>
+                        @context.CurrentStatus.Status
+                    </DisplayTemplate>
+        </DataGridColumn>
+    </DataGridColumns>
+</DataGrid>
+@code {
+
+    private string customerName = "";
+    private List<RemittanceDto> Remittances { get; set; } = new List<RemittanceDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    private async Task OnCustomerNameChange(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            
+            await LoadRemittances();
+        }
+    }
+
+    private async Task LoadRemittances()
+    {
+        Remittances = await RemittanceAppService.SearchByNameAsync(customerName);
+    }
+}

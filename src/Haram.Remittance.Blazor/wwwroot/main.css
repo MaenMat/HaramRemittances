@@ -1,0 +1,100 @@
+/* Global styles for the Remittance application */
+
+:root .lpx-brand-logo {
+    --lpx-logo: url('/images/logo/leptonx/logo-light.png');
+    --lpx-logo-icon: url('/images/logo/leptonx/logo-light-thumbnail.png');
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    display: block;
+    position: fixed;
+    top: calc( 50% - ( 40px / 2) );
+    right: calc( 50% - ( 40px / 2) );
+}
+
+.double-bounce1, .double-bounce2 {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #333;
+    opacity: 0.6;
+    position: absolute;
+    top: 0;
+    left: 0;
+    -webkit-animation: sk-bounce 2.0s infinite ease-in-out;
+    animation: sk-bounce 2.0s infinite ease-in-out;
+}
+
+.double-bounce2 {
+    -webkit-animation-delay: -1.0s;
+    animation-delay: -1.0s;
+}
+
+@-webkit-keyframes sk-bounce {
+    0%, 100% {
+        -webkit-transform: scale(0.0)
+    }
+
+    50% {
+        -webkit-transform: scale(1.0)
+    }
+}
+
+@keyframes sk-bounce {
+    0%, 100% {
+        transform: scale(0.0);
+        -webkit-transform: scale(0.0);
+    }
+
+    50% {
+        transform: scale(1.0);
+        -webkit-transform: scale(1.0);
+    }
+}
+.custom-modal {
+    max-width: 500px;
+}
+
+.custom-header {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.close-button {
+    color: #ffffff;
+}
+
+.custom-footer {
+    justify-content: space-between;
+}
+
+.modal-title {
+    margin-bottom: 0;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.form-control {
+    background-color: #f8f9fa;
+}
+
+.search-container {
+    margin-bottom: 2rem;
+    margin-left: 1rem;
+}
+
+.search-input {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    width: 200px; /* Adjust width as needed */
+    font-size: 16px; /* Example font size */
+}

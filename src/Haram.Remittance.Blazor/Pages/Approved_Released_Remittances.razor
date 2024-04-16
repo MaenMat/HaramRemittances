@@ -1,0 +1,330 @@
+﻿@page "/remittances/approved"
+@using Haram.Remittance.Remittances
+@using Haram.Remittance.Localization
+@using Volo.Abp.AspNetCore.Components.Notifications
+@using Volo.Abp.AspNetCore.Components.Web
+@using Haram.Remittance.Blazor.Pages
+@using System;
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Threading.Tasks;
+@using Haram.Remittance.Permissions;
+@using Blazorise;
+@using Blazorise.DataGrid;
+@using Microsoft.AspNetCore.Authorization;
+@using Volo.Abp.Application.Dtos;
+@using Haram.Remittance.Customers
+@using Haram.Remittance.Currencies
+@inherits RemittanceComponentBase
+@inject IRemittanceAppService RemittanceAppService
+@inject ICustomerAppService CustomerAppService
+@inject ICurrencyAppService CurrencyAppService
+@inject IUiNotificationService _uiNotificationService;
+@inject AbpBlazorMessageLocalizerHelper<RemittanceResource> LH
+
+<Card>
+    <CardHeader>
+        <Row Class="justify-content-between">
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <h2>@L["Remittances.Approved"]</h2>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        <DataGrid TItem="RemittanceDto"
+                  Data="RemittanceList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridColumn Width="150px"
+                                TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.Id)"
+                                Sortable="false"
+                                Caption="@L["Actions"]">
+                    <DisplayTemplate>
+                        <Dropdown>
+                            <DropdownToggle Color="Color.Primary">
+                                @L["Actions"]
+                            </DropdownToggle>
+                            <DropdownMenu>
+                                @if (CanReleaseRemittance && context.CurrentStatus.Status != Status.Released)
+                                {
+                                    <DropdownItem Clicked="()=>ReleaseRemittanceAsync(context)">
+                                        @L["Release"]
+                                    </DropdownItem>
+                                }
+                                @if (CanReleaseRemittance)
+                                {
+                                    <DropdownItem Clicked="() => OpenAdditionalInfoModal(context)">
+                                        @L["Show Details"]
+                                    </DropdownItem>
+                                }
+                            </DropdownMenu>
+                        </Dropdown>
+                    </DisplayTemplate>
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.Type)"
+                                Caption="@L["RemittanceType"]">
+                    <DisplayTemplate>
+                        @L[$"Enum:Remittance.Type.{context.Type}"]
+                    </DisplayTemplate>
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.SerialNumber)"
+                                Caption="@L["SerialNumber"]">
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.Amount)"
+                                Caption="@L["Amount"]">
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.TotalAmount)"
+                                Caption="@L["TotalAmount"]">
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.CreationTime)"
+                                Caption="@L["CreationTime"]">
+                    <DisplayTemplate>
+                        @context.CreationTime.ToShortDateString()
+                    </DisplayTemplate>
+                </DataGridColumn>
+
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.SenderFullName)"
+                                Caption="@L["SenderFullName"]">
+                </DataGridColumn>
+                <DataGridColumn TItem="RemittanceDto"
+                                Field="@nameof(RemittanceDto.CurrentStatus)"
+                                Caption="@L["CurrentStatus"]">
+                    <DisplayTemplate>
+                        @context.CurrentStatus.Status
+                    </DisplayTemplate>
+                </DataGridColumn>
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+<Modal @ref="ShowRemittanceModal">
+    <ModalContent IsCentered="true" Class="custom-modal">
+        <Form>
+            <ModalHeader Class="custom-header">
+                <h5 class="modal-title">Remittance Details</h5>
+                <CloseButton Class="close-button" Clicked="CloseAdditionalInfoModal" />
+            </ModalHeader>
+            <ModalBody>
+                @if (SelectedRemittance != null)
+                {
+                    <div class="form-group">
+                        <label class="form-label">@L["Type"]</label>
+                        <div class="form-control">@L[$"Enum:Remittance.Type.{SelectedRemittance.Type}"]</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["SerialNumber"]</label>
+                        <div class="form-control">@SelectedRemittance.SerialNumber</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["CreationTime"]</label>
+                        <div class="form-control">@SelectedRemittance.CreationTime.ToShortDateString()</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["Amount"]</label>
+                        <div class="form-control">@SelectedRemittance.Amount</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["TotalAmount"]</label>
+                        <div class="form-control">@SelectedRemittance.TotalAmount</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["SenderFullName"]</label>
+                        <div class="form-control">@SelectedRemittance.SenderFullName</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["Issuer"]</label>
+                        <div class="form-control">@SelectedRemittance.IssuedBy</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["Approver"]</label>
+                        <div class="form-control">@SelectedRemittance.ApprovedBy</div>
+                    </div>
+                    @if (SelectedRemittance.ReleasedBy != null)
+                    {
+                        <div class="form-group">
+                            <label class="form-label">@L["Releaser"]</label>
+                            <div class="form-control">@SelectedRemittance.ReleasedBy</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>No remittance selected.</p>
+                }
+            </ModalBody>
+            <ModalFooter Class="custom-footer">
+                <Button Color="Color.Secondary" Clicked="CloseAdditionalInfoModal">Close</Button>
+                @if (SelectedRemittance != null && SelectedRemittance.CurrentStatus.Status != Status.Released)
+                {
+                    <Button Color="Color.Secondary" Clicked="RequestToRelease">Release</Button>
+                }
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+<Modal @ref="SelectReceiverModal">
+    <ModalBackdrop />
+    <ModalContent IsCentered="true">
+        <Form>
+            <ModalHeader>
+                <ModalTitle>@L["SelectReceiver"]</ModalTitle>
+                <CloseButton Clicked="CloseReceiverModal" />
+            </ModalHeader>
+            <ModalBody>
+                    @if (SelectedRemittance != null)
+                {
+                    <div class="form-group">
+                        <label class="form-label">@L["Previously Inserted Receiver Name"]</label>
+                        <div class="form-control">@SelectedRemittance.ReceiverName</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">@L["Previously Inserted Receiver Phone"]</label>
+                        <div class="form-control">@SelectedRemittance.ReceiverPhone</div>
+                    </div>
+                }
+                    <Field>
+                        <FieldLabel>@L["Receiver"]</FieldLabel>
+                        <Select TValue="Guid" @bind-SelectedValue="@receiverId"> 
+                            <SelectItem Disabled>
+                            -- Select Receiver --
+                        </SelectItem>
+                        @if (CustomersList.Count() > 0){
+                            @foreach (var customer in CustomersList)
+                            {
+                                <SelectItem TValue="Guid" Value="@customer.Id">
+                                    @customer.FirstName @customer.LastName
+                                </SelectItem>
+                            }
+                        }
+                        
+                    </Select>
+                </Field>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseReceiverModal">
+                    @L["Cancel"]
+                </Button>
+                <Button Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Clicked="(()=> ReleaseRemittanceAsync(SelectedRemittance))">
+                    @L["Release"]
+                </Button>
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+
+@code {
+
+    private IReadOnlyList<RemittanceDto> RemittanceList { get; set; }
+    private List<CustomerDto> CustomersList { get; set; } = new List<CustomerDto>();
+    private int PageSize { get; } = LimitedResultRequestDto.DefaultMaxResultCount;
+    private int CurrentPage { get; set; }
+    private string CurrentSorting { get; set; }
+    private int TotalCount { get; set; }
+    private bool CanReleaseRemittance { get; set; }
+    private RemittanceDto SelectedRemittance { get; set; } = null;
+    private Modal ShowRemittanceModal { get; set; }
+    private Modal SelectReceiverModal { get; set; }
+    private Guid receiverId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        receiverId = new Guid();
+        SelectedRemittance = null;
+        await GetRemittancesAsync();
+        CustomersList = await CustomerAppService.GetAllCustomersAsync();
+        await SetPermissionsAsync();
+    }
+    private async Task SetPermissionsAsync()
+    {
+        CanReleaseRemittance = await AuthorizationService.IsGrantedAsync(RemittancePermissions.Remittances.Release);
+    }
+    private async Task GetRemittancesAsync()
+    {
+        var result = await RemittanceAppService.GetApprovedReleasedListAsync(
+            new PagedAndSortedResultRequestDto
+                {
+                    MaxResultCount = PageSize,
+                    SkipCount = CurrentPage * PageSize,
+                    Sorting = CurrentSorting
+                }
+            );
+
+        RemittanceList = result.Items;
+        TotalCount = (int)result.TotalCount;
+    }
+    private async Task OnDataGridReadAsync(DataGridReadDataEventArgs<RemittanceDto> e)
+    {
+        CurrentSorting = e.Columns
+            .Where(c => c.SortDirection != SortDirection.Default)
+            .Select(c => c.Field + (c.SortDirection == SortDirection.Descending ? " DESC" : ""))
+            .JoinAsString(",");
+        CurrentPage = e.Page - 1;
+
+        await GetRemittancesAsync();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ReleaseRemittanceAsync(RemittanceDto remittance)
+    {
+        if (receiverId == Guid.Empty)
+        {
+            await _uiNotificationService.Error(
+                "Select the Receiver First!"
+            );
+            OpenReceiverModal(remittance);
+            return;
+        }
+        await RemittanceAppService.ReleaseAsync(remittance.Id, receiverId);
+        await GetRemittancesAsync();
+        CloseReceiverModal();
+    }
+
+    private void OpenAdditionalInfoModal(RemittanceDto remittance)
+    {
+        SelectedRemittance = remittance;
+        ShowRemittanceModal.Show();
+    }
+    private void CloseAdditionalInfoModal()
+    {
+        ShowRemittanceModal.Hide();
+    }
+    private void OpenReceiverModal(RemittanceDto remittance)
+    {
+        SelectedRemittance = remittance;
+        SelectReceiverModal.Show();
+        return;
+    }
+    private void CloseReceiverModal()
+    {
+        SelectReceiverModal.Hide();
+    }
+    private void RequestToRelease()
+    {
+        ShowRemittanceModal.Hide();
+        SelectReceiverModal.Show();
+    }
+
+}
+
