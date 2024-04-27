@@ -58,5 +58,41 @@ namespace Haram.Remittance.Currencies
             }
             return base.CreateAsync(input);
         }
+        public async override Task<CurrencyDto> UpdateAsync(Guid id, CreateUpdateCurrencyDto input)
+        {
+            var theCurrency = await _currencyRepository.GetAsync(id);
+            if (theCurrency.Name == input.Name && theCurrency.Symbol == input.Symbol)
+            {
+                return await base.UpdateAsync(id, input);
+            }
+            if (theCurrency.Name == input.Name && theCurrency.Symbol != input.Symbol)
+            {
+                var ExistCurrency = await _currencyRepository.FirstOrDefaultAsync(c => c.Symbol == input.Symbol);
+                if (ExistCurrency != null)
+                {
+                    throw new CurrencyAlreadyExistsException();
+                }
+                return await base.UpdateAsync(id, input);
+            }
+            if (theCurrency.Name != input.Name && theCurrency.Symbol == input.Symbol)
+            {
+                var ExistCurrency = await _currencyRepository.FirstOrDefaultAsync(c => c.Name == input.Name);
+                if (ExistCurrency != null)
+                {
+                    throw new CurrencyAlreadyExistsException();
+                }
+                return await base.UpdateAsync(id, input);
+            }
+            if (theCurrency.Name != input.Name && theCurrency.Symbol != input.Symbol)
+            {
+                var ExistCurrency = await _currencyRepository.FirstOrDefaultAsync(c => c.Name == input.Name || c.Symbol == input.Symbol);
+                if (ExistCurrency != null)
+                {
+                    throw new CurrencyAlreadyExistsException();
+                }
+                return await base.UpdateAsync(id, input);
+            }
+            return await base.UpdateAsync(id, input);
+        }
     }
 }
